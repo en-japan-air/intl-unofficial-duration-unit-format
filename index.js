@@ -44,14 +44,17 @@ class DurationUnitFormat {
 
   _formatToken (token, buckets) {
     const {value} = token;
+    // istanbul ignore if
+    if (!value) {
+      return [];
+    }
     if (value.unit) {
       const number = buckets[value.unit];
       return (number || this.isTimer) ? this._formatDurationToParts(value.unit, number) : [];
-    } else if (value) {
-      // If there is no .unit it's text, but it could be an empty string
-      return[{ type: 'literal', value }];
     }
-    return [];
+
+    // If there is no .unit it's text, but it could be an empty string
+    return[{ type: 'literal', value }];
   }
 
   _formatDurationToParts (unit, number) {
