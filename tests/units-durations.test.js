@@ -64,4 +64,21 @@ describe('formatToParts', () => {
       { type: 'literal', value: ' + ' },
     ]);
   });
+
+  it('falls back to {value} when `formatUnits` not complete', function () {
+    const parts = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
+      style: 'custom',
+      format: '{hours} + {minutes}',
+      formatDuration: '{unit}: {value}',
+      formatUnits: {
+        hour: 'H',
+      },
+    }));
+
+    expect(parts(0)).toEqual([
+      { type: 'unit', value: '0' },
+      { type: 'literal', value: ': ' },
+      { type: 'minute', value: '0' },
+    ]);
+  });
 });
