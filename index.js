@@ -1,6 +1,10 @@
 import IntlMessageFormat from 'intl-messageformat';
 import trim from './lib/trim';
 
+function isNumeric (type) {
+  return !['literal', 'unit'].includes(type);
+}
+
 class DurationUnitFormat {
   constructor (locales, options = defaultOptions) {
     this.locales = locales;
@@ -10,12 +14,23 @@ class DurationUnitFormat {
     this.style = options.style || DurationUnitFormat.styles.WIDE;
     // .isTimer determines some special behaviour, we want to keep the 0s
     this.isTimer = this.style === DurationUnitFormat.styles.DOTTED;
+    /*
+    "all" // Hide all the fields that have a zero-value
+    "leadingAndTrailing" // Hide all the zero fields in the leading or the trailing
+    "leadingOnly"
+    "trailingOnly"
+    "none" // Do not hide any zero-valued fields
+    */
+    this._hideZeroValues = options.hideZeroValues || 'none';
     // .format used `seconds`, `minutes`, `hours`, ... as placeholders
     this._format = options.format || (this.isTimer ? '{minutes}:{seconds}' : '{seconds}');
     // How to format unit according to style
     this.formatUnits = options.formatUnits || defaultOptions.formatUnits;
     // .formatDuration determines whether we use a space or not
     this.formatDuration = options.formatDuration || defaultOptions.formatDuration;
+
+    this._unitValue = this.formatDuration.match(/\{unit\}.*\{value\}/);
+
     this.shouldRound = options.round === true;
   }
 
@@ -50,7 +65,7 @@ class DurationUnitFormat {
     }
     if (value.unit) {
       const number = buckets[value.unit];
-      return (number || this.isTimer) ? this._formatDurationToParts(value.unit, number) : [];
+      return typeof number === 'number' ? this._formatDurationToParts(value.unit, number) : [];
     }
 
     // If there is no .unit it's text, but it could be an empty string
@@ -95,8 +110,73 @@ class DurationUnitFormat {
   }
 
   _trimOutput (result, parts) {
-    const trimmed = trim(result, this.isTimer);
-    if (trimmed.every((_) => _.type === 'literal')) {
+    const hideLeadingZeroes = ['all', 'leadingAndTrailing', 'leadingOnly'].includes(this._hideZeroValues);
+    const hideMiddleZeroes = this._hideZeroValues === 'all';
+    const hideEndZeroes = ['all', 'leadingAndTrailing', 'trailingOnly'].includes(this._hideZeroValues);
+
+    let state = 'leading';
+    let trimmed = trim(result, this.isTimer);
+
+    if (hideLeadingZeroes) {
+      for (let idx = 0; idx < trimmed.length; idx++) {
+        const {type, value} = trimmed[idx];
+        const numeric = isNumeric(type);
+        if (numeric && value !== '0') {
+          state = 'middle';
+          // We check `hideMiddleZeroes` and `hideEndZeroes` later
+          break;
+        }
+        if (numeric) {
+          trimmed.splice(0, idx + 1);
+          if (!this._unitValue) {
+            while (trimmed[0] && !isNumeric(trimmed[0].type)) {
+              trimmed.splice(0, 1);
+            }
+          }
+          idx = -1;
+        }
+      }
+    }
+
+    state = 'end';
+    if (hideMiddleZeroes || hideEndZeroes) {
+      trimmed.reverse();
+      for (let idx = 0; idx < trimmed.length; idx++) {
+        const {type, value} = trimmed[idx];
+        const numeric = isNumeric(type);
+        if (numeric && value !== '0') {
+          if (state === 'end') {
+            state = 'middle';
+          } else if (state === 'middle' && !hideMiddleZeroes) {
+            state = 'leading';
+            break;
+          }
+          continue;
+        }
+        if (state === 'middle') {
+          if (hideMiddleZeroes && numeric) {
+            while (trimmed[idx]) {
+              trimmed.splice(idx--, 1);
+              if (isNumeric(trimmed[idx].type) && trimmed[idx].value !== '0') {
+                break;
+              }
+            }
+          }
+          continue;
+        }
+        if (hideEndZeroes && numeric) {
+          // Get final literal as well
+          trimmed.splice(0, idx + 2);
+          if (trimmed[idx] && trimmed[idx].type === 'unit') {
+            trimmed.splice(0, 1);
+          }
+          idx = -1;
+        }
+      }
+      trimmed.reverse();
+    }
+
+    if (trimmed.every(({type}) => type === 'literal')) {
       // if everything cancels out and there are only literals,
       // then return 0 on the lowest available unit
       const minUnit = [

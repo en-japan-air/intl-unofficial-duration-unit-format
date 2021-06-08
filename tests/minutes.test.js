@@ -4,6 +4,7 @@ describe('formatToParts', () => {
   it('formats to parts with custom format including minutes', () => {
     const parts = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
       format: '{minutes} {seconds}',
+      hideZeroValues: 'leadingAndTrailing',
     }));
 
     expect(parts(1)).toEqual([

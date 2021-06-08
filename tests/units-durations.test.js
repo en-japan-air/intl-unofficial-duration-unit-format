@@ -4,6 +4,7 @@ describe('formatToParts', () => {
   it('formats to parts with custom format for units and durations', () => {
     const parts = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
       style: 'custom',
+      hideZeroValues: 'leadingAndTrailing',
       format: '{hours} + {minutes}',
       formatDuration: '{unit}: {value}',
       formatUnits: {
@@ -69,6 +70,7 @@ describe('formatToParts', () => {
     const parts = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
       style: 'custom',
       format: '{hours} + {minutes}',
+      hideZeroValues: 'leadingOnly',
       formatDuration: '{unit}: {value}',
       formatUnits: {
         hour: 'H',

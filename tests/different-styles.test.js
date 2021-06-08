@@ -1,10 +1,22 @@
 import DurationUnitFormat from '../index';
 
 describe('formatToParts', () => {
-  it('formats to parts with default format of only seconds', () => {
-    const wide = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', { style: DurationUnitFormat.styles.WIDE, format: '{minutes} {seconds}' }));
-    const short = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', { style: DurationUnitFormat.styles.SHORT, format: '{minutes} {seconds}' }));
-    const narrow = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', { style: DurationUnitFormat.styles.NARROW, format: '{minutes} {seconds}' }));
+  it('formats to parts based on style and format', () => {
+    const wide = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
+      style: DurationUnitFormat.styles.WIDE,
+      format: '{minutes} {seconds}',
+      hideZeroValues: 'leadingAndTrailing',
+    }));
+    const short = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
+      style: DurationUnitFormat.styles.SHORT,
+      format: '{minutes} {seconds}',
+      hideZeroValues: 'leadingAndTrailing',
+    }));
+    const narrow = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
+      style: DurationUnitFormat.styles.NARROW,
+      format: '{minutes} {seconds}',
+      hideZeroValues: 'leadingAndTrailing',
+    }));
 
     expect(wide(0)).toEqual([
       { type: 'second', value: '0' },

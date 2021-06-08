@@ -3,6 +3,7 @@ import DurationUnitFormat from '../index';
 describe('formatToParts', () => {
   it('formats to parts with custom format not including seconds', () => {
     const parts = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
+      hideZeroValues: 'leadingAndTrailing',
       format: '{days} {hours} {minutes}',
     }));
 
