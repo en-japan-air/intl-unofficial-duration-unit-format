@@ -96,7 +96,7 @@ class DurationUnitFormat {
 
   _trimOutput (result, parts) {
     const trimmed = trim(result, this.isTimer);
-    if (!trimmed.some((_) => _.type !== 'literal')) {
+    if (trimmed.every((_) => _.type === 'literal')) {
       // if everything cancels out and there are only literals,
       // then return 0 on the lowest available unit
       const minUnit = [
