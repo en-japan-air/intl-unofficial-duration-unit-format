@@ -5,8 +5,8 @@
   "main": "dist/cjs/duration-unit-format.cjs.js",
   "module": "dist/esm/duration-unit-format.esm.js",
   "exports": {
-    "import": "dist/esm/duration-unit-format.esm.js",
-    "default": "dist/cjs/duration-unit-format.cjs.js"
+    "import": "./dist/esm/duration-unit-format.esm.js",
+    "default": "./dist/cjs/duration-unit-format.cjs.js"
   },
   "scripts": {
     "compile": "rollup -c rollup.config.js",
