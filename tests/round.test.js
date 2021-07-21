@@ -4,6 +4,7 @@ describe('formatToParts', () => {
   it('formats to parts with custom format rounding missing seconds', () => {
     const parts = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
       format: '{hours} {minutes}',
+      hideZeroValues: 'leadingAndTrailing',
       round: true,
     }));
 

@@ -1,21 +1,36 @@
 import IntlMessageFormat from 'intl-messageformat';
 import trim from './lib/trim';
 
+function isNumeric (type) {
+  return !['literal', 'unit'].includes(type);
+}
+
 class DurationUnitFormat {
   constructor (locales, options = defaultOptions) {
     this.locales = locales;
     // TODO I'm ignoring the unit for now, value is always expressed in seconds
     this.unit = 'second';
     // .style determines how the placeholders are converted to plain text
-    this.style = options.style || DurationUnitFormat.styles.LONG;
+    this.style = options.style || DurationUnitFormat.styles.WIDE;
     // .isTimer determines some special behaviour, we want to keep the 0s
-    this.isTimer = this.style === DurationUnitFormat.styles.TIMER;
+    this.isTimer = this.style === DurationUnitFormat.styles.DOTTED;
+    /*
+    "all" // Hide all the fields that have a zero-value
+    "leadingAndTrailing" // Hide all the zero fields in the leading or the trailing
+    "leadingOnly"
+    "trailingOnly"
+    "none" // Do not hide any zero-valued fields
+    */
+    this._hideZeroValues = options.hideZeroValues || 'none';
     // .format used `seconds`, `minutes`, `hours`, ... as placeholders
     this._format = options.format || (this.isTimer ? '{minutes}:{seconds}' : '{seconds}');
     // How to format unit according to style
     this.formatUnits = options.formatUnits || defaultOptions.formatUnits;
     // .formatDuration determines whether we use a space or not
     this.formatDuration = options.formatDuration || defaultOptions.formatDuration;
+
+    this._unitValue = this.formatDuration.match(/\{unit\}.*\{value\}/);
+
     this.shouldRound = options.round === true;
   }
 
@@ -44,25 +59,29 @@ class DurationUnitFormat {
 
   _formatToken (token, buckets) {
     const {value} = token;
+    // istanbul ignore if
+    if (!value) {
+      return [];
+    }
     if (value.unit) {
       const number = buckets[value.unit];
-      return (number || this.isTimer) ? this._formatDurationToParts(value.unit, number) : [];
-    } else if (value) {
-      // If there is no .unit it's text, but it could be an empty string
-      return[{ type: 'literal', value }];
+      return typeof number === 'number' ? this._formatDurationToParts(value.unit, number) : [];
     }
-    return [];
+
+    // If there is no .unit it's text, but it could be an empty string
+    return[{ type: 'literal', value }];
   }
 
   _formatDurationToParts (unit, number) {
     if (this.isTimer) {
-      // With timer style, we only show the value
+      // With dotted style, we only show the value
       return [{ type: unit, value: this._formatValue(number) }];
-    } else if (isSpecialStyle(this.style)) {
+    }
+    if (isSpecialStyle(this.style)) {
       return new Intl.NumberFormat(this.locales, {
         style: 'unit',
         unit: unit,
-        unitDisplay: this.style,
+        unitDisplay: this.style === 'wide' ? 'long' : this.style,
       }).formatToParts(number).map((_) => ({
         // NumberFormat uses 'integer' for types, but I prefer using the unit
         // This is more similar to what happens in DateTimeFormat
@@ -91,8 +110,73 @@ class DurationUnitFormat {
   }
 
   _trimOutput (result, parts) {
-    const trimmed = trim(result, this.isTimer);
-    if (!trimmed.find((_) => _.type !== 'literal')) {
+    const hideLeadingZeroes = ['all', 'leadingAndTrailing', 'leadingOnly'].includes(this._hideZeroValues);
+    const hideMiddleZeroes = this._hideZeroValues === 'all';
+    const hideEndZeroes = ['all', 'leadingAndTrailing', 'trailingOnly'].includes(this._hideZeroValues);
+
+    let state = 'leading';
+    let trimmed = trim(result, this.isTimer);
+
+    if (hideLeadingZeroes) {
+      for (let idx = 0; idx < trimmed.length; idx++) {
+        const {type, value} = trimmed[idx];
+        const numeric = isNumeric(type);
+        if (numeric && value !== '0') {
+          state = 'middle';
+          // We check `hideMiddleZeroes` and `hideEndZeroes` later
+          break;
+        }
+        if (numeric) {
+          trimmed.splice(0, idx + 1);
+          if (!this._unitValue) {
+            while (trimmed[0] && !isNumeric(trimmed[0].type)) {
+              trimmed.splice(0, 1);
+            }
+          }
+          idx = -1;
+        }
+      }
+    }
+
+    state = 'end';
+    if (hideMiddleZeroes || hideEndZeroes) {
+      trimmed.reverse();
+      for (let idx = 0; idx < trimmed.length; idx++) {
+        const {type, value} = trimmed[idx];
+        const numeric = isNumeric(type);
+        if (numeric && value !== '0') {
+          if (state === 'end') {
+            state = 'middle';
+          } else if (state === 'middle' && !hideMiddleZeroes) {
+            state = 'leading';
+            break;
+          }
+          continue;
+        }
+        if (state === 'middle') {
+          if (hideMiddleZeroes && numeric) {
+            while (trimmed[idx]) {
+              trimmed.splice(idx--, 1);
+              if (isNumeric(trimmed[idx].type) && trimmed[idx].value !== '0') {
+                break;
+              }
+            }
+          }
+          continue;
+        }
+        if (hideEndZeroes && numeric) {
+          // Get final literal as well
+          trimmed.splice(0, idx + 2);
+          if (trimmed[idx] && trimmed[idx].type === 'unit') {
+            trimmed.splice(0, 1);
+          }
+          idx = -1;
+        }
+      }
+      trimmed.reverse();
+    }
+
+    if (trimmed.every(({type}) => type === 'literal')) {
       // if everything cancels out and there are only literals,
       // then return 0 on the lowest available unit
       const minUnit = [
@@ -116,9 +200,9 @@ DurationUnitFormat.units = {
 
 DurationUnitFormat.styles = {
   CUSTOM: 'custom',
-  TIMER: 'timer',
-  // http://www.unicode.org/cldr/charts/27/summary/pl.html#5556
-  LONG: 'long',
+  DOTTED: 'dotted',
+  // https://www.unicode.org/cldr/cldr-aux/charts/27/summary/pl.html#5556
+  WIDE: 'wide',
   SHORT: 'short',
   NARROW: 'narrow',
 };
@@ -133,7 +217,7 @@ const defaultOptions = {
     [DurationUnitFormat.units.MINUTE]: '{value, plural, one {minute} other {minutes}}',
     [DurationUnitFormat.units.SECOND]: '{value, plural, one {second} other {seconds}}',
   },
-  style: DurationUnitFormat.styles.LONG,
+  style: DurationUnitFormat.styles.WIDE,
 };
 
 const SPLIT_POINTS = /(\{value\}|\{unit\})/;
@@ -146,7 +230,7 @@ const SECONDS_IN = {
 };
 
 function has(parts, unit) {
-  return !!parts.find((_) => _.value.unit === unit);
+  return parts.some((_) => _.value.unit === unit);
 }
 
 function splitSecondsInBuckets(value, valueUnit, parts, shouldRound) {
@@ -184,7 +268,7 @@ function splitSecondsInBuckets(value, valueUnit, parts, shouldRound) {
 
 function isSpecialStyle(style) {
   return [
-    DurationUnitFormat.styles.LONG,
+    DurationUnitFormat.styles.WIDE,
     DurationUnitFormat.styles.SHORT,
     DurationUnitFormat.styles.NARROW,
   ].includes(style);

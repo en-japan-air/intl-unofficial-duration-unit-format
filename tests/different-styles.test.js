@@ -1,27 +1,39 @@
 import DurationUnitFormat from '../index';
 
 describe('formatToParts', () => {
-  it('formats to parts with default format of only seconds', () => {
-    const long = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', { style: DurationUnitFormat.styles.LONG, format: '{minutes} {seconds}' }));
-    const short = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', { style: DurationUnitFormat.styles.SHORT, format: '{minutes} {seconds}' }));
-    const narrow = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', { style: DurationUnitFormat.styles.NARROW, format: '{minutes} {seconds}' }));
+  it('formats to parts based on style and format', () => {
+    const wide = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
+      style: DurationUnitFormat.styles.WIDE,
+      format: '{minutes} {seconds}',
+      hideZeroValues: 'leadingAndTrailing',
+    }));
+    const short = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
+      style: DurationUnitFormat.styles.SHORT,
+      format: '{minutes} {seconds}',
+      hideZeroValues: 'leadingAndTrailing',
+    }));
+    const narrow = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
+      style: DurationUnitFormat.styles.NARROW,
+      format: '{minutes} {seconds}',
+      hideZeroValues: 'leadingAndTrailing',
+    }));
 
-    expect(long(0)).toEqual([
+    expect(wide(0)).toEqual([
       { type: 'second', value: '0' },
       { type: 'literal', value: ' ' },
       { type: 'unit', value: 'seconds' },
     ]);
-    expect(long(1)).toEqual([
+    expect(wide(1)).toEqual([
       { type: 'second', value: '1' },
       { type: 'literal', value: ' ' },
       { type: 'unit', value: 'second' },
     ]);
-    expect(long(60)).toEqual([
+    expect(wide(60)).toEqual([
       { type: 'minute', value: '1' },
       { type: 'literal', value: ' ' },
       { type: 'unit', value: 'minute' },
     ]);
-    expect(long(150)).toEqual([
+    expect(wide(150)).toEqual([
       { type: 'minute', value: '2' },
       { type: 'literal', value: ' ' },
       { type: 'unit', value: 'minutes' },

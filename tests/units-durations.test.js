@@ -4,6 +4,7 @@ describe('formatToParts', () => {
   it('formats to parts with custom format for units and durations', () => {
     const parts = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
       style: 'custom',
+      hideZeroValues: 'leadingAndTrailing',
       format: '{hours} + {minutes}',
       formatDuration: '{unit}: {value}',
       formatUnits: {
@@ -62,6 +63,24 @@ describe('formatToParts', () => {
       { type: 'literal', value: ': ' },
       { type: 'hour', value: '100' },
       { type: 'literal', value: ' + ' },
+    ]);
+  });
+
+  it('falls back to {value} when `formatUnits` not complete', function () {
+    const parts = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
+      style: 'custom',
+      format: '{hours} + {minutes}',
+      hideZeroValues: 'leadingOnly',
+      formatDuration: '{unit}: {value}',
+      formatUnits: {
+        hour: 'H',
+      },
+    }));
+
+    expect(parts(0)).toEqual([
+      { type: 'unit', value: '0' },
+      { type: 'literal', value: ': ' },
+      { type: 'minute', value: '0' },
     ]);
   });
 });

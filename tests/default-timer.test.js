@@ -1,9 +1,9 @@
 import DurationUnitFormat from '../index';
 
 describe('formatToParts', () => {
-  it('formats to timer parts with default format of seconds and minutes', () => {
+  it('formats to dotted parts with default format of seconds and minutes', () => {
     const parts = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
-      style: 'timer',
+      style: 'dotted',
     }));
 
     expect(parts(0)).toEqual([

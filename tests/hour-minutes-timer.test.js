@@ -1,9 +1,9 @@
 import DurationUnitFormat from '../index';
 
 describe('formatToParts', () => {
-  it('formats to timer parts with custom format excluding seconds', () => {
+  it('formats to dotted parts with custom format excluding seconds', () => {
     const parts = DurationUnitFormat.prototype.formatToParts.bind(new DurationUnitFormat('en', {
-      style: 'timer',
+      style: 'dotted',
       format: '{hours}h{minutes}m',
       round: true,
     }));

@@ -75,15 +75,15 @@ Once the duration object is created with `duration = new DurationUnitFormat()`, 
 
 One of
 
-1. `DurationUnitFormat.styles.LONG` or just `long` for long format time (`1 minute 30 seconds`)
+1. `DurationUnitFormat.styles.WIDE` or just `wide` for wide format time (`1 minute 30 seconds`)
 1. `DurationUnitFormat.styles.SHORT` or just `short` for short format time (`1 min 30 sec`)
 1. `DurationUnitFormat.styles.NARROW` or just `narrow` for narrow format time (`1m 30s`)
-1. `DurationUnitFormat.styles.TIMER` for timers (`1:30`)
+1. `DurationUnitFormat.styles.DOTTED` for timers (`1:30`)
 1. `DurationUnitFormat.styles.CUSTOM` for custom formats (`1 minute 30 seconds`)
 
-The default is `LONG`.
+The default is `WIDE`.
 
-When the style is `TIMER` numbers are padded and different default formats are applied.
+When the style is `DOTTED` numbers are padded and different default formats are applied.
 
 The options `formatDuration` and `formatUnits` only apply when the style is `CUSTOM`.
 
@@ -94,13 +94,13 @@ Given the input of `3600` (1 hour), it'll generate
 | `CUSTOM` | undefined (defaults to `{seconds}`) | `3600 seconds` |
 | `CUSTOM` | `{minutes} {seconds}` | `60 minutes` |
 | `CUSTOM` | `{hour} {minutes} {seconds}` | `1 hour` |
-| `TIMER`  | undefined (defaults to `{minutes}:{seconds}`)| `60:00` |
-| `TIMER`  | `{seconds}s` | `3600s` |
-| `TIMER`  | `{hour}:{minutes}:{seconds}` | `1:00:00` |
-| `TIMER`  | `{days}d {hour}:{minutes}:{seconds}` | `0d 01:00:00` |
-| `LONG`   | undefined (defaults to `{seconds}`) | `3600 seconds` |
-| `LONG`   | `{minutes} {seconds}` | `60 minutes` |
-| `LONG`   | `{hour} {minutes} {seconds}` | `1 hour` |
+| `DOTTED`  | undefined (defaults to `{minutes}:{seconds}`)| `60:00` |
+| `DOTTED`  | `{seconds}s` | `3600s` |
+| `DOTTED`  | `{hour}:{minutes}:{seconds}` | `1:00:00` |
+| `DOTTED`  | `{days}d {hour}:{minutes}:{seconds}` | `0d 01:00:00` |
+| `WIDE`   | undefined (defaults to `{seconds}`) | `3600 seconds` |
+| `WIDE`   | `{minutes} {seconds}` | `60 minutes` |
+| `WIDE`   | `{hour} {minutes} {seconds}` | `1 hour` |
 | `SHORT`  | undefined (defaults to `{seconds}`) | `3600 sec` |
 | `SHORT`  | `{minutes} {seconds}` | `60 min` |
 | `SHORT`  | `{hour} {minutes} {seconds}` | `1 hr` |
@@ -108,7 +108,7 @@ Given the input of `3600` (1 hour), it'll generate
 | `NARROW` | `{minutes} {seconds}` | `60m` |
 | `NARROW` | `{hour} {minutes} {seconds}` | `1h` |
 
-As shown from the examples, when `TIMER` is used
+As shown from the examples, when `DOTTED` is used
 
 1. empty units are kept and rendered as `00` or `0` if they're the highest unit in the format. Empty units in `CUSTOM` are discarded.
 1. values are padded to at least 2 digits

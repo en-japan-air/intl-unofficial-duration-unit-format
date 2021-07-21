@@ -46,13 +46,14 @@
   },
   "devDependencies": {
     "@babel/core": "7.14.3",
-    "@babel/preset-env": "7.14.2",
+    "@babel/preset-env": "7.14.4",
     "@formatjs/intl-numberformat": "7.1.2",
-    "babel-jest": "27.0.1",
+    "babel-jest": "27.0.2",
+    "eslint": "^7.27.0",
     "intl-messageformat": "9.6.16",
     "intl-pluralrules": "1.2.2",
-    "jest": "27.0.1",
-    "rollup": "2.50.2",
+    "jest": "27.0.3",
+    "rollup": "2.50.4",
     "rollup-plugin-filesize": "9.1.1"
   },
   "peerDependencies": {
